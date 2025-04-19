@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using PersistentClipboard.Model;
 using System;
 using System.Collections.Generic;
@@ -35,7 +34,7 @@ namespace PersistentClipboard
         private ContextMenuStrip trayMenu;
         private string clipboardDirectoryPath;
         private string clipboardFilePath;
-        private string clipboardFilesFolder;
+        private string clipboardFilesDirectory;
 
         public Form1()
         {
@@ -70,7 +69,26 @@ namespace PersistentClipboard
             if (persistentClipboard != null) {
                 try
                 {
-                    // TODO: scan files folder, if file not in clipboard.data -> delete
+                    var persistentClipboardData = (ClipboardData)persistentClipboard;
+                    string[] files = Directory.GetFiles(clipboardFilesDirectory);
+                    List<string> filesToKeep = new List<string>();
+
+                    if (persistentClipboardData.Type == ClipboardDataType.FileDropList)
+                    {
+                        filesToKeep.AddRange(persistentClipboardData.Data);
+                    }
+
+                    foreach (string file in files)
+                    {
+                        if (!filesToKeep.Contains(file))
+                        {
+                            try
+                            {
+                                File.Delete(file);
+                            }
+                            catch { }
+                        }
+                    }
                 }
                 catch { }
             }
@@ -85,8 +103,8 @@ namespace PersistentClipboard
             }
             clipboardDirectoryPath = appFolder;
             clipboardFilePath = Path.Combine(clipboardDirectoryPath, "clipboard.txt");
-            clipboardFilesFolder = Path.Combine(clipboardDirectoryPath, "files");
-            Directory.CreateDirectory(clipboardFilesFolder);
+            clipboardFilesDirectory = Path.Combine(clipboardDirectoryPath, "files");
+            Directory.CreateDirectory(clipboardFilesDirectory);
             LoadPersistentClipboard();
             CleanOldFiles();
 
@@ -151,7 +169,7 @@ namespace PersistentClipboard
                             List<string> files = new List<string>();
                             foreach (var filePath in filePaths)
                             {
-                                string destFile = Path.Combine(clipboardFilesFolder, Path.GetFileName(filePath));
+                                string destFile = Path.Combine(clipboardFilesDirectory, Path.GetFileName(filePath));
                                 File.Copy(filePath, destFile, true);
                                 files.Add(destFile);
                             }
@@ -175,6 +193,7 @@ namespace PersistentClipboard
                     if (persistentClipboard != null)
                     {
                         var persistentClipboardData = (ClipboardData)persistentClipboard;
+
                         try
                         {
                             if (persistentClipboardData.Type == ClipboardDataType.Text)
