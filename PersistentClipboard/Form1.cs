@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using PersistentClipboard.Model;
+﻿using PersistentClipboard.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -60,7 +59,7 @@ namespace PersistentClipboard
                 try
                 {
                     string json = File.ReadAllText(clipboardFilePath);
-                    persistentClipboard = JsonConvert.DeserializeObject<ClipboardData>(json);
+                    persistentClipboard = JsonHelper.Deserialize<ClipboardData>(json);
                 }
                 catch { }
             }
@@ -193,7 +192,7 @@ namespace PersistentClipboard
                 if (clipboardData != null)
                 {
                     persistentClipboard = clipboardData;
-                    File.WriteAllText(clipboardFilePath, JsonConvert.SerializeObject(clipboardData));
+                    File.WriteAllText(clipboardFilePath, JsonHelper.Serialize(clipboardData));
                 }
             }
             catch (Exception ex)
