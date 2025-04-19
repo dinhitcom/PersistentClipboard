@@ -1,43 +1,29 @@
-# Persistent Clipboard (Text-Only Version)
 <p align="center">
-  <img src="assets/logo-transparent.png" alt="Persistent Clipboard Logo" width="200"/>
+  <img src="assets/logo-transparent.png" alt="Persistent Clipboard Logo" width="150"/>
 </p>
 
-## Overview
+# 📋 Persistent Clipboard
+**Persistent Clipboard** is a lightweight Windows app that gives you a secondary clipboard that remembers copied content — even after it's overwritten by a new copy.
 
-Persistent Clipboard is a lightweight Windows application designed to provide a secondary, persistent clipboard for text. This version of the app specifically handles text-only clipboard operations and allows users to save and retrieve text between sessions, making it ideal for users who often need to store and paste recurring text snippets.
+This version includes support for multiple data types (not just text).  
+If you're looking for the simpler text-only version, [see below](#text-only-version).
 
-## Features
+---
 
-- **Text Persistence:** Automatically saves the most recent text copied to the clipboard.
-- **Customizable Hotkeys:** Use keyboard shortcuts to copy and paste from the persistent clipboard.
-- **Tray Icon Support:** Minimizes to the system tray for easy access, with an option to exit from the tray menu.
-- **Cross-Session Clipboard:** Clipboard data is stored in a consistent location, even across reboots, so that you can always access your last copied text.
+## ⚙️ How It Works
 
-## How It Works
+Persistent Clipboard runs in the background and hooks into hotkeys to manage a second clipboard:
 
-### Copying Text to the Clipboard
+### 🧠 Persistent Hotkeys:
+| Hotkey                  | Action                                                                 |
+|-------------------------|------------------------------------------------------------------------|
+| `Ctrl + Shift + C` or `Ctrl + Alt + C` | Copies current selection (just like normal copy) and also stores it to a **persistent clipboard** |
+| `Ctrl + Shift + V` or `Ctrl + Alt + V` | Pastes the content from the **persistent clipboard**, and sets it as the current clipboard         |
 
-When you press **Ctrl + Shift + C** or **Ctrl + Alt + C**, the following actions occur:
-- The application simulates a regular **Ctrl + C** (normal copy) operation to copy the currently selected text to the clipboard.
-- In addition to the regular copy, the application saves the copied text to persistent storage (a file called `clipboard.txt` stored in `%APPDATA%\PersistentClipboard\`).
-- This means that the copied text is saved not only to the clipboard but also to a persistent file, so you can access it later, even after the computer is restarted.
-
-If you press **Ctrl + C**, it behaves like a normal copy operation and does **not** store the value to the persistent clipboard.
-
-### Pasting from the Clipboard
-
-When you press **Ctrl + V**, it pastes the most recent copied value from the clipboard. This is **not** the value stored in persistent storage, but the latest copied value from the standard clipboard.
-
-### Pasting from the Persistent Clipboard
-
-When you press **Ctrl + Shift + V** or **Ctrl + Alt + V**, the application will:
-- Paste the last value saved in the **persistent clipboard** (the value saved to `clipboard.txt`).
-- After pasting, the value from the persistent clipboard is **set as the last copied value** on the system clipboard. This allows you to quickly reuse the persistent value in other applications.
-
-This ensures that when you paste, you have control over whether you're using the normal clipboard (via **Ctrl + V**) or the persistent clipboard (via **Ctrl + Shift + V** or **Ctrl + Alt + V**).
-
-### File Storage
+### 📋 Regular Clipboard:
+- `Ctrl + C` and `Ctrl + V` work normally.
+- Persistent Clipboard does **not** interfere with your regular clipboard unless you use the special hotkeys above.
+### 📁 File Storage
 
 The persistent clipboard data (text) is stored in the following directory:
 
@@ -45,25 +31,42 @@ The persistent clipboard data (text) is stored in the following directory:
 
 This allows the clipboard data to be saved across system reboots and application restarts. You can manually edit the stored clipboard file if necessary, though the application automatically manages it.
 
-### System Tray
+### 💻 System Tray
 
 The application runs in the system tray, allowing you to access it easily without cluttering your taskbar.
 
 - Right-click the tray icon to view the options.
 - Select **Exit** to close the application.
+---
 
-## Download
+## 🔽 Downloads
 
-You can **download the latest prebuilt version** from the [Releases section](https://github.com/dinhitcom/PersistentClipboard/releases) on GitHub. Just download the `.zip` or `.exe` from the latest release, extract it (if needed), and run the `PersistentClipboard.exe` file.
+Go to the [**Releases**](https://github.com/dinhitcom/PersistentClipboard/releases) page to get the latest version.
 
-> No need to build it yourself unless you want to modify or contribute to the code.
+| File                     | Description                                 |
+|--------------------------|---------------------------------------------|
+| `PersistentClipboard.exe` | Standalone executable – run without installing |
+| `PersistentClipboard-installer.zip` file              | Installer package for Windows (recommended) |
+| `PersistentClipboard-text.exe` | Prebuilt **text-only** version                          |
 
-## Installation (Optional for Developers)
+---
+
+## 📝 Text-Only Version
+
+Want just a minimal version that handles **text only**?
+
+- ✅ [Switch to the `text` branch](https://github.com/dinhitcom/PersistentClipboard/tree/text) to view the code
+- 🛠️ The `text` branch only supports plain text, perfect for lightweight use cases
+- 📥 Prebuilt version available in the [Releases](hhttps://github.com/dinhitcom/PersistentClipboard/releases) as `PersistentClipboard-text.exe`
+
+---
+
+## 🛠️ Installation (Optional for Developers)
 
 ### Prerequisites
 
-- .NET Framework 4.5 or later
-- Windows 7 or later
+- .NET Framework 4.8 or later
+- Windows 10 or later
 
 ### How to Build and Run
 
@@ -74,7 +77,8 @@ You can **download the latest prebuilt version** from the [Releases section](htt
    
    The application will minimize to the system tray. You can then use the hotkeys to copy and paste text.
 
-## Switching to Other Versions (Branches)
+
+### Switching to Other Versions (Branches)
 
 This version of Persistent Clipboard only handles text-based data. If you are interested in a version that supports other types of data (such as images or files), you can switch to another branch in this repository that includes these features.
 
@@ -86,10 +90,25 @@ To switch branches, follow these steps:
 
    ```bash
    git checkout [branch-name]
-## License
+---
+## 🖼️ Logo
+
+The app logo is included as part of the UI and tray icon. You can customize it by replacing the embedded `.ico` resource or modifying the project assets.
+
+---
+
+## 🤝 Contributions
+
+Feel free to fork or contribute! Bug fixes, feature improvements, or UI suggestions are welcome.
+
+---
+
+## 🧾 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contact
+---
 
+## 💬 Contact
 For issues, enhancements, or contributions, please open an issue on the GitHub repository or contact the project maintainers.
+
