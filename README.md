@@ -37,6 +37,15 @@ The application runs in the system tray, allowing you to access it easily withou
 
 - Right-click the tray icon to view the options.
 - Select **Exit** to close the application.
+### 🧹 Clear File Storage
+
+You can manually clear all saved files by right-clicking the tray icon and selecting **"Clear Storage"** from the context menu.
+
+- This action will delete all files stored in the application's persistent storage directory.
+- It's useful if you want to free up space or reset the stored clipboard history.
+
+> 💡 **Note:** Old or unused files are also cleaned up automatically when the app starts, so storage doesn’t accumulate over time.
+
 ### 🔄 Auto Start on Windows
 To make Persistent Clipboard start automatically when you log in:
 
