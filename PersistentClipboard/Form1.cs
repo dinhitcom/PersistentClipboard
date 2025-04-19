@@ -1,4 +1,5 @@
 ﻿using PersistentClipboard.Model;
+using PersistentClipboard.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -70,8 +71,7 @@ namespace PersistentClipboard
             if (persistentClipboard != null) {
                 try
                 {
-                    var persistentClipboardData = (ClipboardData)persistentClipboard;
-                    string[] files = Directory.GetFiles(clipboardFilesDirectory);
+                    var persistentClipboardData = persistentClipboard;
                     List<string> filesToKeep = new List<string>();
 
                     if (persistentClipboardData.Type == ClipboardDataType.FileDropList)
@@ -79,17 +79,7 @@ namespace PersistentClipboard
                         filesToKeep.AddRange(persistentClipboardData.Data);
                     }
 
-                    foreach (string file in files)
-                    {
-                        if (!filesToKeep.Contains(file))
-                        {
-                            try
-                            {
-                                File.Delete(file);
-                            }
-                            catch { }
-                        }
-                    }
+                    FileHelper.ClearFiles(clipboardFilesDirectory, filesToKeep);
                 }
                 catch { }
             }
@@ -109,16 +99,19 @@ namespace PersistentClipboard
             LoadPersistentClipboard();
             CleanOldFiles();
 
-            RegisterHotKey(this.Handle, HOTKEY_ID_COPY, MOD_CONTROL | MOD_SHIFT, (int)Keys.C);
-            RegisterHotKey(this.Handle, HOTKEY_ID_PASTE, MOD_CONTROL | MOD_SHIFT, (int)Keys.V);
-            RegisterHotKey(this.Handle, HOTKEY_ID_COPY_ALT, MOD_CONTROL | MOD_ALT, (int)Keys.C);
-            RegisterHotKey(this.Handle, HOTKEY_ID_PASTE_ALT, MOD_CONTROL | MOD_ALT, (int)Keys.V);
+            RegisterHotKey(Handle, HOTKEY_ID_COPY, MOD_CONTROL | MOD_SHIFT, (int)Keys.C);
+            RegisterHotKey(Handle, HOTKEY_ID_PASTE, MOD_CONTROL | MOD_SHIFT, (int)Keys.V);
+            RegisterHotKey(Handle, HOTKEY_ID_COPY_ALT, MOD_CONTROL | MOD_ALT, (int)Keys.C);
+            RegisterHotKey(Handle, HOTKEY_ID_PASTE_ALT, MOD_CONTROL | MOD_ALT, (int)Keys.V);
 
             trayMenu = new ContextMenuStrip();
+            trayMenu.Items.Add("Clear Storage", null, OnClearClicked);
             trayMenu.Items.Add("Exit", null, OnExitClicked);
 
-            trayIcon = new NotifyIcon();
-            trayIcon.Text = "Persistent Clipboard";
+            trayIcon = new NotifyIcon
+            {
+                Text = "Persistent Clipboard"
+            };
             LoadEmbeddedResources();
             trayIcon.ContextMenuStrip = trayMenu;
             trayIcon.Visible = true;
@@ -233,6 +226,18 @@ namespace PersistentClipboard
             }
         }
 
+        private void OnClearClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                FileHelper.ClearFiles(clipboardDirectoryPath);
+                FileHelper.ClearFiles(clipboardFilesDirectory);
+            } catch (Exception ex)
+            {
+                MessageBox.Show("Error when clear storage: " + ex.Message);
+            }
+        }
+
         private void OnExitClicked(object sender, EventArgs e)
         {
             trayIcon.Visible = false;
@@ -241,10 +246,10 @@ namespace PersistentClipboard
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            UnregisterHotKey(this.Handle, HOTKEY_ID_COPY);
-            UnregisterHotKey(this.Handle, HOTKEY_ID_PASTE);
-            UnregisterHotKey(this.Handle, HOTKEY_ID_COPY_ALT);
-            UnregisterHotKey(this.Handle, HOTKEY_ID_PASTE_ALT);
+            UnregisterHotKey(Handle, HOTKEY_ID_COPY);
+            UnregisterHotKey(Handle, HOTKEY_ID_PASTE);
+            UnregisterHotKey(Handle, HOTKEY_ID_COPY_ALT);
+            UnregisterHotKey(Handle, HOTKEY_ID_PASTE_ALT);
             base.OnFormClosing(e);
         }
     }
