@@ -13,15 +13,15 @@ namespace PersistentClipboard
 {
     public partial class Form1 : Form
     {
-        const int HOTKEY_ID_COPY = 1;
-        const int HOTKEY_ID_PASTE = 2;
-        const int HOTKEY_ID_COPY_ALT = 3;
-        const int HOTKEY_ID_PASTE_ALT = 4;
+        private const int HOTKEY_ID_COPY = 1;
+        private const int HOTKEY_ID_PASTE = 2;
+        private const int HOTKEY_ID_COPY_ALT = 3;
+        private const int HOTKEY_ID_PASTE_ALT = 4;
 
-        const int MOD_ALT = 0x0001;
-        const int MOD_CONTROL = 0x0002;
-        const int MOD_SHIFT = 0x0004;
-        const int WM_HOTKEY = 0x0312;
+        private const int MOD_ALT = 0x0001;
+        private const int MOD_CONTROL = 0x0002;
+        private const int MOD_SHIFT = 0x0004;
+        private const int WM_HOTKEY = 0x0312;
 
         [DllImport("user32.dll")]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
@@ -29,7 +29,7 @@ namespace PersistentClipboard
         [DllImport("user32.dll")]
         private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
-        private object persistentClipboard = null;
+        private ClipboardData persistentClipboard = null;
         private NotifyIcon trayIcon;
         private ContextMenuStrip trayMenu;
         private string clipboardDirectoryPath;
@@ -47,23 +47,25 @@ namespace PersistentClipboard
             using (Stream stream = asm.GetManifestResourceStream("PersistentClipboard.icon-transparent.ico"))
             {
                 if (stream != null)
+                {
                     trayIcon.Icon = new Icon(stream);
+                }
             }
         }
 
         private void LoadPersistentClipboard()
         {
-            if (persistentClipboard == null && File.Exists(clipboardFilePath))
+            if (File.Exists(clipboardFilePath))
             {
                 try
                 {
-                    var json = File.ReadAllText(clipboardFilePath);
-                    var clipboardData = JsonConvert.DeserializeObject<ClipboardData>(json);
-                    persistentClipboard = clipboardData;
+                    string json = File.ReadAllText(clipboardFilePath);
+                    persistentClipboard = JsonConvert.DeserializeObject<ClipboardData>(json);
                 }
                 catch { }
             }
         }
+
         private void CleanOldFiles()
         {
             if (persistentClipboard != null) {
@@ -93,18 +95,18 @@ namespace PersistentClipboard
                 catch { }
             }
         }
+
         private void Form1_Load(object sender, EventArgs e)
         {
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string appFolder = Path.Combine(appDataPath, "PersistentClipboard");
-            if (!Directory.Exists(appFolder))
-            {
-                Directory.CreateDirectory(appFolder); 
-            }
+            if (!Directory.Exists(appFolder)) Directory.CreateDirectory(appFolder);
+
             clipboardDirectoryPath = appFolder;
-            clipboardFilePath = Path.Combine(clipboardDirectoryPath, "clipboard.txt");
-            clipboardFilesDirectory = Path.Combine(clipboardDirectoryPath, "files");
-            Directory.CreateDirectory(clipboardFilesDirectory);
+            clipboardFilePath = Path.Combine(appFolder, "clipboard.txt");
+            clipboardFilesDirectory = Path.Combine(appFolder, "files");
+            if (!Directory.Exists(clipboardFilesDirectory)) Directory.CreateDirectory(clipboardFilesDirectory);
+
             LoadPersistentClipboard();
             CleanOldFiles();
 
@@ -119,7 +121,6 @@ namespace PersistentClipboard
             trayIcon = new NotifyIcon();
             trayIcon.Text = "Persistent Clipboard";
             LoadEmbeddedResources();
-
             trayIcon.ContextMenuStrip = trayMenu;
             trayIcon.Visible = true;
         }
@@ -132,97 +133,105 @@ namespace PersistentClipboard
 
                 if (id == HOTKEY_ID_COPY || id == HOTKEY_ID_COPY_ALT)
                 {
-                    SendKeys.SendWait("^c");
-                    System.Threading.Thread.Sleep(100);
-
-                    try
-                    {
-                        if (Clipboard.ContainsText())
-                        {
-                            var text = Clipboard.GetText();
-                            var clipboardData = new ClipboardData
-                            {
-                                Type = ClipboardDataType.Text,
-                                Data = new string[] { text }
-                            };
-
-                            persistentClipboard = clipboardData;
-                            File.WriteAllText(clipboardFilePath, JsonConvert.SerializeObject(clipboardData));
-                        }
-                        else if (Clipboard.ContainsImage())
-                        {
-                            Image clipboardImage = Clipboard.GetImage();
-                            string imagePath = Path.Combine(clipboardDirectoryPath, "clipboard.png");
-                            clipboardImage.Save(imagePath, System.Drawing.Imaging.ImageFormat.Png);
-                            var clipboardData = new ClipboardData
-                            {
-                                Type = ClipboardDataType.Image,
-                                Data = new string[] { imagePath }
-                            };
-
-                            persistentClipboard = clipboardData;
-                            File.WriteAllText(clipboardFilePath, JsonConvert.SerializeObject(clipboardData));
-                        }
-                        else if (Clipboard.ContainsFileDropList())
-                        {
-                            var filePaths = Clipboard.GetFileDropList();
-                            List<string> files = new List<string>();
-                            foreach (var filePath in filePaths)
-                            {
-                                string destFile = Path.Combine(clipboardFilesDirectory, Path.GetFileName(filePath));
-                                File.Copy(filePath, destFile, true);
-                                files.Add(destFile);
-                            }
-
-                            var clipboardData = new ClipboardData
-                            {
-                                Type = ClipboardDataType.FileDropList,
-                                Data = files.ToArray()
-                            };
-                            persistentClipboard = clipboardData;
-                            File.WriteAllText(clipboardFilePath, JsonConvert.SerializeObject(clipboardData));
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Error when copy to persistent clipboard: " + ex.Message);
-                    }
+                    HandleCopy();
                 }
                 else if (id == HOTKEY_ID_PASTE || id == HOTKEY_ID_PASTE_ALT)
                 {
-                    if (persistentClipboard != null)
-                    {
-                        var persistentClipboardData = (ClipboardData)persistentClipboard;
-
-                        try
-                        {
-                            if (persistentClipboardData.Type == ClipboardDataType.Text)
-                            {
-                                Clipboard.SetText(persistentClipboardData.Data[0]);
-                            }
-                            else if (persistentClipboardData.Type == ClipboardDataType.Image)
-                            {
-                                Image img = Image.FromFile(persistentClipboardData.Data[0]);
-                                Clipboard.SetImage(img);
-                            }
-                            else if (persistentClipboardData.Type == ClipboardDataType.FileDropList)
-                            {
-
-                                StringCollection filePaths = new StringCollection();
-                                filePaths.AddRange(persistentClipboardData.Data);
-                                Clipboard.SetFileDropList(filePaths);
-                            }
-                        }
-                        catch (Exception ex) {
-                            MessageBox.Show("Error when pasting from persistent clipboard: " + ex.Message);
-                        }
-
-                        SendKeys.SendWait("^v");
-                    }
+                    HandlePaste();
                 }
             }
 
             base.WndProc(ref m);
+        }
+
+        private void HandleCopy()
+        {
+            SendKeys.SendWait("^c");
+            System.Threading.Thread.Sleep(100);
+
+            try
+            {
+                ClipboardData clipboardData = null;
+
+                if (Clipboard.ContainsText())
+                {
+                    clipboardData = new ClipboardData
+                    {
+                        Type = ClipboardDataType.Text,
+                        Data = new string[] { Clipboard.GetText() }
+                    };
+                }
+                else if (Clipboard.ContainsImage())
+                {
+                    string imagePath = Path.Combine(clipboardDirectoryPath, "clipboard.png");
+                    Clipboard.GetImage().Save(imagePath, System.Drawing.Imaging.ImageFormat.Png);
+                    clipboardData = new ClipboardData
+                    {
+                        Type = ClipboardDataType.Image,
+                        Data = new string[] { imagePath }
+                    };
+                }
+                else if (Clipboard.ContainsFileDropList())
+                {
+                    var fileDropList = Clipboard.GetFileDropList();
+                    List<string> copiedFiles = new List<string>();
+
+                    foreach (string filePath in fileDropList)
+                    {
+                        string destFile = Path.Combine(clipboardFilesDirectory, Path.GetFileName(filePath));
+                        File.Copy(filePath, destFile, true);
+                        copiedFiles.Add(destFile);
+                    }
+
+                    clipboardData = new ClipboardData
+                    {
+                        Type = ClipboardDataType.FileDropList,
+                        Data = copiedFiles.ToArray()
+                    };
+                }
+
+                if (clipboardData != null)
+                {
+                    persistentClipboard = clipboardData;
+                    File.WriteAllText(clipboardFilePath, JsonConvert.SerializeObject(clipboardData));
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error when copying to persistent clipboard: " + ex.Message);
+            }
+        }
+
+        private void HandlePaste()
+        {
+            if (persistentClipboard is ClipboardData clipboardData)
+            {
+                try
+                {
+                    switch (clipboardData.Type)
+                    {
+                        case ClipboardDataType.Text:
+                            Clipboard.SetText(clipboardData.Data[0]);
+                            break;
+
+                        case ClipboardDataType.Image:
+                            Clipboard.SetImage(Image.FromFile(clipboardData.Data[0]));
+                            break;
+
+                        case ClipboardDataType.FileDropList:
+                            StringCollection filePaths = new StringCollection();
+                            filePaths.AddRange(clipboardData.Data);
+                            Clipboard.SetFileDropList(filePaths);
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error when pasting from persistent clipboard: " + ex.Message);
+                }
+
+                SendKeys.SendWait("^v");
+            }
         }
 
         private void OnExitClicked(object sender, EventArgs e)
