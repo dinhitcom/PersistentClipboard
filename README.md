@@ -37,6 +37,12 @@ The application runs in the system tray, allowing you to access it easily withou
 
 - Right-click the tray icon to view the options.
 - Select **Exit** to close the application.
+### 🔄 Auto Start on Windows
+To make Persistent Clipboard start automatically when you log in:
+
+- Press `Win + R` to open the Run dialog.
+- Type `shell:startup` and hit Enter. This opens your Startup folder.
+- Copy the `PersistentClipboard.exe` file into this folder.
 ---
 
 ## 🔽 Downloads
